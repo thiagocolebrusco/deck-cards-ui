@@ -19,6 +19,39 @@ body {
 
   & > h1 {
     color: #efef5f;
+    font-size: 3em;
+    margin-bottom: 10px;
+  }
+  .btn {
+    border: 0;
+    background-color: #0c965e;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 15px 20px;
+    font-size: 1em;
+
+    &.active {
+      background-color: #0ebc76;
+      border: 1px #0cda87 solid;
+    }
+  }
+
+  .form-input {
+    border: 0;
+    padding: 15px 15px;
+    font-size: 1em;
+  }
+
+  .form-input:focus-visible {
+    outline: 0;
+  }
+
+  .label {
+    color: white;
+    font-weight: bold;
+    margin: 15px 0;
+    font-size: 1.2em;
   }
 }
 </style>

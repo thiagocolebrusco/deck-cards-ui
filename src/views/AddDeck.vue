@@ -1,21 +1,33 @@
 <template>
-  <div class="add-deck">
-    <div class="cards-list">
-      <Card
-        class="card"
-        v-for="(card, index) in cards"
-        :key="card.key"
-        :suit="card.suit"
-        :value="card.value"
-        @click="removeCard(index)"
-      />
+  <div>
+    <div class="add-deck">
+      <div class="cards-list">
+        <Card
+          class="card"
+          v-for="(card, index) in cards"
+          :key="card.key"
+          :suit="card.suit"
+          :value="card.value"
+          @click="removeCard(index)"
+        />
+      </div>
+
+      <div class="card-addition">
+        <p class="label">Add cards to the pile</p>
+        <input class="form-input" placeholder="Card name" maxlength="3" v-model="cardInput" />
+        <button class="btn" @click="addCard">Add</button>
+        <span class="error-message" v-if="errorMessage">{{ errorMessage }}</span>
+      </div>
     </div>
 
-    <div class="card-addition">
-      <p>Add cards to the pile</p>
-      <input maxlength="3" v-model="cardInput" />
-      <button @click="addCard">Add</button>
-      <span class="error-message" v-if="errorMessage">{{ errorMessage }}</span>
+    <div class="submit-form">
+      <div>
+        <p class="label">Rotation card</p>
+        <input class="form-input" placeholder="Card name" maxlength="3" v-model="rotationCard" />
+      </div>
+      <div>
+        <button class="btn" @click="submitDeck">Submit deck</button>
+      </div>
     </div>
   </div>
 </template>
@@ -23,8 +35,9 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import Card from "@/components/Card.vue";
-import { Suits, Values } from "@/constants/enums";
-import { ICard } from "@/constants/interfaces";
+import { ICard, IDeck } from "@/constants/interfaces";
+import { getCardData, validateCard } from "@/util";
+import CardService from "@/services/CardService";
 
 @Component({
   components: { Card },
@@ -34,7 +47,9 @@ export default class AddDeck extends Vue {
 
   private cardInput = "";
 
-  private errorMessage!: string;
+  private rotationCard = "";
+
+  private errorMessage = "";
 
   public addCard(): void {
     try {
@@ -49,9 +64,56 @@ export default class AddDeck extends Vue {
   }
 
   public removeCard(index: number): void {
-    console.log(index);
     this.cards.splice(index, 1);
   }
+
+  public async submitDeck(): Promise<void> {
+    const rotationCard = getCardData(this.rotationCard);
+
+    const [deck, rotationDeck] = (await Promise.allSettled([
+      this.createMainDeck(),
+      this.createRotationDeck(rotationCard),
+    ])) as {
+      value?: any; //eslint-disable-line
+      status?: string;
+    }[];
+
+    const decksId = `${deck?.value?.deckId}|${rotationDeck?.value?.deckId}`;
+
+    this.$router.push(`/deck/${decksId}/`);
+  }
+
+  private async createMainDeck(): Promise<IDeck> {
+    const deck = await this.createDeck(this.cards);
+    await CardService.drawCardsFromDeck(deck.deckId, this.cards.length);
+    await CardService.addCardsToPile(deck.deckId, this.cards);
+
+    return deck;
+  }
+
+  private async createRotationDeck(rotationCard: ICard): Promise<IDeck> {
+    const rotationCardDeck = await this.createDeck([rotationCard]);
+    await CardService.drawCardsFromDeck(rotationCardDeck.deckId, 1);
+    await CardService.addCardsToPile(rotationCardDeck.deckId, [rotationCard], "rotation");
+
+    return rotationCardDeck;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  private async createDeck(cards: ICard[]): Promise<IDeck> {
+    const { data } = await CardService.addDeck(cards);
+    const deck: IDeck = {
+      deckId: data.deck_id,
+      remaining: data.remaining,
+      shuffled: data.shuffled,
+      success: data.success,
+    };
+    return deck;
+  }
+
+  // private async addCardsToPile(deckId: string): Promise<void> {
+  //   const { data } = await CardService.addCardsToPile(deckId, this.cards);
+  // }
 
   private getCard(): ICard {
     const key = this.cardInput?.toUpperCase();
@@ -68,67 +130,66 @@ export default class AddDeck extends Vue {
       throw new Error("You can't add this card in duplicity. Try another card.");
     }
 
-    const suit = key.slice(key.length - 1);
-    const value = key.slice(0, key.length - 1);
+    const card: ICard = getCardData(key);
 
-    if (!Suits.find((item) => item.key === suit)) {
-      throw new Error("The Suit you chose is invalid. Please fix it.");
-    }
+    validateCard(card);
 
-    if (!Values.includes(value)) {
-      throw new Error("The Value you chose is invalid. Please fix it.");
-    }
-
-    return { value, suit, key };
+    return card;
   }
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .add-deck {
   background-color: #17644d;
+  border: 1px #0a4634 solid;
+  margin-bottom: 15px;
 
   .cards-list {
-    min-height: 250px;
+    min-height: 230px;
 
     .card {
-      margin: 20px;
+      margin: 10px 20px;
     }
   }
   .card-addition {
     padding: 20px;
 
-    & > p {
-      color: white;
-      font-weight: bold;
-      margin: 5px 0;
-    }
-
-    & > input,
-    button {
-      line-height: 40px;
-    }
-    & > input {
+    & .form-input {
       border-radius: 5px 0 0 5px;
-      border: 0;
-      text-transform: uppercase;
     }
 
-    & > button {
+    & .btn {
       border-radius: 0 5px 5px 0;
       border: 0;
-      background-color: #0ebc76;
-      padding-left: 20px;
-      padding-right: 20px;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
     }
 
     & > .error-message {
       color: white;
       margin-left: 20px;
     }
+  }
+}
+
+.submit-form {
+  float: right;
+
+  & > div {
+    display: inline-block;
+  }
+
+  & .form-input,
+  & .btn {
+    border-radius: 5px;
+  }
+
+  & .form-input {
+    margin-right: 20px;
+  }
+
+  & .btn {
+    border: 1px white solid;
+    padding: 15px 50px;
   }
 }
 </style>

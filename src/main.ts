@@ -4,7 +4,7 @@ import router from "./router";
 import store from "./store";
 
 Vue.config.productionTip = false;
-
+console.log(process.env.VUE_APP_API_URL);
 new Vue({
   router,
   store,
