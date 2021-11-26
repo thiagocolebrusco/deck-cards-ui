@@ -1,20 +1,20 @@
 <template>
-  <div class="card" :class="suitName">
+  <div class="card" :class="suitData.name" @click="$emit('click')">
     <div class="header">
       <div class="value">{{ value }}</div>
-      <div class="suit">{{ suitSymbol }}</div>
+      <div class="suit">{{ suitData.symbol }}</div>
     </div>
-    <div class="body">{{ suitSymbol }}</div>
+    <div class="body">{{ suitData.symbol }}</div>
     <div class="footer">
       <div class="value">{{ value }}</div>
-      <div class="suit">{{ suitSymbol }}</div>
+      <div class="suit">{{ suitData.symbol }}</div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-// eslint-disable-next-line
-import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { Component, Vue, Prop } from "vue-property-decorator";
+import { Suits } from "@/constants/enums";
 
 @Component
 export default class Card extends Vue {
@@ -22,40 +22,8 @@ export default class Card extends Vue {
 
   @Prop({ required: true }) readonly value!: string;
 
-  private suitName!: string;
-
-  private suitSymbol!: string;
-
-  created(): void {
-    this.setupData();
-  }
-
-  public setupData(): void {
-    switch (this.suit) {
-      case "H":
-        this.suitName = "hearts";
-        this.suitSymbol = "♥";
-        break;
-      case "D":
-        this.suitName = "diamonds";
-        this.suitSymbol = "♦";
-        break;
-      case "S":
-        this.suitName = "spades";
-        this.suitSymbol = "♠";
-        break;
-      case "C":
-        this.suitName = "clubs";
-        this.suitSymbol = "♣";
-        break;
-      default:
-        break;
-    }
-  }
-
-  @Watch("suit")
-  suitChanged(): void {
-    this.setupData();
+  get suitData(): { name: string; symbol: string; key: string } | undefined {
+    return Suits.find((suit) => suit.key === this.suit);
   }
 }
 </script>
@@ -64,11 +32,12 @@ export default class Card extends Vue {
 .card {
   width: 130px;
   height: 200px;
-  background-color: #f3f3f3;
+  background-color: white;
   border-radius: 15px;
   position: relative;
   font-size: 20px;
   display: inline-block;
+  cursor: pointer;
 
   > .header {
     top: 20px;

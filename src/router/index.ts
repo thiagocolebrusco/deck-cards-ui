@@ -6,7 +6,12 @@ Vue.use(VueRouter);
 
 const routes: Array<RouteConfig> = [
   {
-    path: "/",
+    path: "/deck/new",
+    name: "AddDeck",
+    component: AddDeck,
+  },
+  {
+    path: "/deck/:deck_id",
     name: "AddDeck",
     component: AddDeck,
   },

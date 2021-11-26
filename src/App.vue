@@ -1,29 +1,24 @@
 <template>
   <div id="app">
-    <div id="nav"><router-link to="/">Home</router-link> |</div>
+    <h1>Deck of cards</h1>
     <router-view />
   </div>
 </template>
 
 <style lang="scss">
+body {
+  background-color: #15775a;
+}
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
   color: #2c3e50;
-}
+  width: 1200px;
+  margin: 0 auto;
 
-#nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
-    }
+  & > h1 {
+    color: #efef5f;
   }
 }
 </style>
